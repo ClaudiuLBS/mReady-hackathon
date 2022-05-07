@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
 import TitanOneText from "../components/TitanOneText";
 
 const footerWidth = Dimensions.get("window").width;
@@ -16,7 +18,8 @@ const diceFaces = [dice1, dice2, dice3, dice4, dice5, dice6];
 const MainScreen = () => {
   const [leftDice, setLeftDice] = useState(dice1);
   const [rightDice, setRightDice] = useState(dice2);
-  const [result, setResult] = useState((0, 0));
+  const [result, setResult] = useState(null);
+  const [previousResult, setPreviousResult] = useState(null);
 
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -26,27 +29,71 @@ const MainScreen = () => {
     let leftDiceNumber;
     let rightDiceNumber;
     let iterations = 0;
+    setPreviousResult(result);
     let interval = setInterval(() => {
       iterations++;
 
       leftDiceNumber = randomIntFromInterval(1, 6);
       rightDiceNumber = randomIntFromInterval(1, 6);
 
-      setResult((leftDiceNumber, rightDiceNumber));
       setLeftDice(diceFaces[leftDiceNumber - 1]);
       setRightDice(diceFaces[rightDiceNumber - 1]);
 
-      if (iterations == 20) clearInterval(interval);
+      if (iterations == 20) {
+        clearInterval(interval);
+        setResult([leftDiceNumber, rightDiceNumber]);
+        storeDiceValues([leftDiceNumber, rightDiceNumber]);
+      }
     }, 100);
   };
 
+  useEffect(() => {
+    getDiceValues().then((data) => {
+      if (data.diceValues.length > 0) {
+        const lastValue = data.diceValues[data.diceValues.length - 1];
+        setPreviousResult(lastValue);
+        setResult(lastValue);
+        setLeftDice(diceFaces[lastValue[0]] - 1);
+        setRightDice(diceFaces[lastValue[1]] - 1);
+      }
+    });
+  }, []);
+
+  const getDiceValues = async () => {
+    try {
+      const value = await AsyncStorage.getItem("data1");
+      if (value !== null) {
+        return JSON.parse(value);
+      } else return { diceValues: [] };
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const storeDiceValues = async (value) => {
+    try {
+      const lastDiceValues = await getDiceValues();
+      const newDiceValues = {
+        diceValues: [...lastDiceValues.diceValues, value],
+      };
+      await AsyncStorage.setItem("data1", JSON.stringify(newDiceValues));
+    } catch (e) {
+      console.log(e);
+    }
+  };
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
       {/* HISTORY BUTTON */}
       <TouchableOpacity style={styles.historyContainer} activeOpacity={0.7}>
         <View style={styles.textContainer}>
           <TitanOneText style={{ fontSize: 14 }}>Zarul anterior</TitanOneText>
-          <TitanOneText>6-5</TitanOneText>
+          {previousResult ? (
+            <TitanOneText>
+              {previousResult[0]}-{previousResult[1]}
+            </TitanOneText>
+          ) : (
+            <TitanOneText>0-0</TitanOneText>
+          )}
         </View>
         <Image resizeMode="contain" style={styles.historyIcon} source={require("../assets/icons/ic_nav_history.png")} />
       </TouchableOpacity>
