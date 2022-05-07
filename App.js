@@ -2,7 +2,6 @@ import { StatusBar, StyleSheet } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
 
-import EmptyHistoryScreen from "./screens/EmptyHistoryScreen";
 import MainScreen from "./screens/MainScreen";
 import HistoryScreen from "./screens/HistoryScreen";
 
@@ -14,7 +13,6 @@ const App = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={MainScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />
-        <Stack.Screen name="EmptyHistory" component={EmptyHistoryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

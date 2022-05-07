@@ -1,6 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { FlatList, Image, ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
+import EmptyHistory from "../components/EmptyHistory";
 import HistoryItem from "../components/HistoryItem";
 import TitanOneText from "../components/TitanOneText";
 
@@ -11,7 +12,7 @@ const HistoryScreen = ({ route }) => {
     console.log(previousResults);
   }, []);
 
-  if (!previousResults) return <View></View>;
+  if (!previousResults) return <EmptyHistory />;
 
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
