@@ -1,10 +1,22 @@
 import { useFonts, TitanOne_400Regular } from "@expo-google-fonts/titan-one";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const footerWidth = Dimensions.get("window").width;
 const footerHeight = footerWidth / 1.9;
+const dice1 = require("../assets/dice/dice_face_01.png");
+const dice2 = require("../assets/dice/dice_face_02.png");
+const dice3 = require("../assets/dice/dice_face_03.png");
+const dice4 = require("../assets/dice/dice_face_04.png");
+const dice5 = require("../assets/dice/dice_face_05.png");
+const dice6 = require("../assets/dice/dice_face_06.png");
+
+const diceFaces = [dice1, dice2, dice3, dice4, dice5, dice6];
 const MainScreen = () => {
+  const [leftDice, setLeftDice] = useState(dice1);
+  const [rightDice, setRightDice] = useState(dice2);
+  const [result, setResult] = useState((0, 0));
+
   let [fontsLoaded] = useFonts({
     TitanOne_400Regular,
   });
@@ -12,6 +24,26 @@ const MainScreen = () => {
   if (!fontsLoaded) {
     return <Text>Loading</Text>;
   }
+  const randomIntFromInterval = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  };
+  const rollDice = () => {
+    let leftDiceNumber;
+    let rightDiceNumber;
+    let iterations = 0;
+    let interval = setInterval(() => {
+      iterations++;
+
+      leftDiceNumber = randomIntFromInterval(1, 6);
+      rightDiceNumber = randomIntFromInterval(1, 6);
+
+      setResult((leftDiceNumber, rightDiceNumber));
+      setLeftDice(diceFaces[leftDiceNumber - 1]);
+      setRightDice(diceFaces[rightDiceNumber - 1]);
+
+      if (iterations == 20) clearInterval(interval);
+    }, 100);
+  };
 
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
@@ -29,14 +61,14 @@ const MainScreen = () => {
 
       {/* DICE */}
       <View style={styles.diceContainer}>
-        <Image resizeMode="contain" style={styles.dice} source={require("../assets/dice/dice_face_01.png")} />
-        <Image resizeMode="contain" style={styles.dice} source={require("../assets/dice/dice_face_02.png")} />
+        <Image resizeMode="contain" style={styles.dice} source={leftDice} />
+        <Image resizeMode="contain" style={styles.dice} source={rightDice} />
       </View>
 
       {/* DICE COMMANDS */}
       <View>
         {/* INVARTE ZARURILE BUTTON */}
-        <TouchableOpacity style={styles.rollDiceButton} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.rollDiceButton} onPress={rollDice} activeOpacity={0.7}>
           <Text style={[styles.text, { fontSize: 16, alignSelf: "center" }]}>Învârte zarurile</Text>
         </TouchableOpacity>
 
