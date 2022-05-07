@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -16,10 +17,11 @@ const dice6 = require("../assets/dice/dice_face_06.png");
 
 const diceFaces = [dice1, dice2, dice3, dice4, dice5, dice6];
 const MainScreen = () => {
+  const navigation = useNavigation();
   const [leftDice, setLeftDice] = useState(dice1);
   const [rightDice, setRightDice] = useState(dice2);
   const [result, setResult] = useState(null);
-  const [previousResult, setPreviousResult] = useState(null);
+  const [previousResults, setPreviousResults] = useState(null);
 
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -29,7 +31,9 @@ const MainScreen = () => {
     let leftDiceNumber;
     let rightDiceNumber;
     let iterations = 0;
-    setPreviousResult(result);
+    console.log(result);
+    if (previousResults) setPreviousResults([result, ...previousResults]);
+    else if (result) setPreviousResults([result]);
     let interval = setInterval(() => {
       iterations++;
 
@@ -43,6 +47,7 @@ const MainScreen = () => {
         clearInterval(interval);
         setResult([leftDiceNumber, rightDiceNumber]);
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
+        console.log(previousResults);
       }
     }, 100);
   };
@@ -50,8 +55,8 @@ const MainScreen = () => {
   useEffect(() => {
     getDiceValues().then((data) => {
       if (data.diceValues.length > 0) {
-        const lastValue = data.diceValues[data.diceValues.length - 1];
-        setPreviousResult(lastValue);
+        const lastValue = data.diceValues[0];
+        setPreviousResults(data.diceValues);
         setResult(lastValue);
         setLeftDice(diceFaces[lastValue[0]] - 1);
         setRightDice(diceFaces[lastValue[1]] - 1);
@@ -61,7 +66,7 @@ const MainScreen = () => {
 
   const getDiceValues = async () => {
     try {
-      const value = await AsyncStorage.getItem("data1");
+      const value = await AsyncStorage.getItem("data6");
       if (value !== null) {
         return JSON.parse(value);
       } else return { diceValues: [] };
@@ -74,9 +79,9 @@ const MainScreen = () => {
     try {
       const lastDiceValues = await getDiceValues();
       const newDiceValues = {
-        diceValues: [...lastDiceValues.diceValues, value],
+        diceValues: [value, ...lastDiceValues.diceValues],
       };
-      await AsyncStorage.setItem("data1", JSON.stringify(newDiceValues));
+      await AsyncStorage.setItem("data6", JSON.stringify(newDiceValues));
     } catch (e) {
       console.log(e);
     }
@@ -84,12 +89,16 @@ const MainScreen = () => {
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
       {/* HISTORY BUTTON */}
-      <TouchableOpacity style={styles.historyContainer} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.historyContainer}
+        onPress={() => navigation.navigate("History", { previousResults })}
+        activeOpacity={0.7}
+      >
         <View style={styles.textContainer}>
           <TitanOneText style={{ fontSize: 14 }}>Zarul anterior</TitanOneText>
-          {previousResult ? (
+          {previousResults ? (
             <TitanOneText>
-              {previousResult[0]}-{previousResult[1]}
+              {previousResults[0][0]}-{previousResults[0][1]}
             </TitanOneText>
           ) : (
             <TitanOneText>0-0</TitanOneText>
