@@ -1,9 +1,10 @@
-import { useFonts, TitanOne_400Regular } from "@expo-google-fonts/titan-one";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import TitanOneText from "../components/TitanOneText";
 
 const footerWidth = Dimensions.get("window").width;
 const footerHeight = footerWidth / 1.9;
+
 const dice1 = require("../assets/dice/dice_face_01.png");
 const dice2 = require("../assets/dice/dice_face_02.png");
 const dice3 = require("../assets/dice/dice_face_03.png");
@@ -17,16 +18,10 @@ const MainScreen = () => {
   const [rightDice, setRightDice] = useState(dice2);
   const [result, setResult] = useState((0, 0));
 
-  let [fontsLoaded] = useFonts({
-    TitanOne_400Regular,
-  });
-
-  if (!fontsLoaded) {
-    return <Text>Loading</Text>;
-  }
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
   };
+
   const rollDice = () => {
     let leftDiceNumber;
     let rightDiceNumber;
@@ -48,13 +43,13 @@ const MainScreen = () => {
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
       {/* HISTORY BUTTON */}
-      <View style={styles.historyContainer}>
+      <TouchableOpacity style={styles.historyContainer} activeOpacity={0.7}>
         <View style={styles.textContainer}>
-          <Text style={[styles.text, { fontSize: 14 }]}>Zarul anterior</Text>
-          <Text style={styles.text}>6-5</Text>
+          <TitanOneText style={{ fontSize: 14 }}>Zarul anterior</TitanOneText>
+          <TitanOneText>6-5</TitanOneText>
         </View>
         <Image resizeMode="contain" style={styles.historyIcon} source={require("../assets/icons/ic_nav_history.png")} />
-      </View>
+      </TouchableOpacity>
 
       {/* INVARTE-MA LOGO */}
       <Image resizeMode="contain" style={styles.logo} source={require("../assets/logos/illustration_app.png")} />
@@ -69,12 +64,12 @@ const MainScreen = () => {
       <View>
         {/* INVARTE ZARURILE BUTTON */}
         <TouchableOpacity style={styles.rollDiceButton} onPress={rollDice} activeOpacity={0.7}>
-          <Text style={[styles.text, { fontSize: 16, alignSelf: "center" }]}>Învârte zarurile</Text>
+          <TitanOneText style={styles.diceText}>Învârte zarurile</TitanOneText>
         </TouchableOpacity>
 
         {/* DA UN SHAKE */}
         <View style={styles.shakeContainer}>
-          <Text style={[styles.text, { fontSize: 16, alignSelf: "center" }]}>...sau dă un shake</Text>
+          <TitanOneText style={styles.diceText}>...sau dă un shake</TitanOneText>
           <Image style={styles.shakeImage} source={require("../assets/icons/ic_shake.png")} />
         </View>
       </View>
@@ -109,9 +104,6 @@ const styles = StyleSheet.create({
     marginVertical: 0,
   },
   text: {
-    color: "white",
-    fontSize: 18,
-    fontFamily: "TitanOne_400Regular",
     alignSelf: "flex-end",
   },
   historyIcon: {
@@ -132,6 +124,10 @@ const styles = StyleSheet.create({
     height: 108,
     width: 108,
     margin: 15,
+  },
+  diceText: {
+    fontSize: 16,
+    alignSelf: "center",
   },
   rollDiceButton: {
     backgroundColor: "#D87153",
