@@ -7,7 +7,6 @@ import { Accelerometer } from "expo-sensors";
 import TitanOneText from "../components/TitanOneText";
 import DoubleDiceModal from "./../components/DoubleDiceModal";
 import CustomButton from "../components/CustomButton";
-import ShakeEventExpo from "../utils/ShakeEventExpo";
 
 const footerWidth = Dimensions.get("window").width;
 const footerHeight = footerWidth / 1.9;
@@ -29,8 +28,6 @@ const MainScreen = () => {
   const [rolling, setRolling] = useState(false);
   const [activeModal, setActiveModal] = useState(false);
   const [subscription, setSubscription] = useState(null);
-
-  const [rn, setRn] = useState(0);
 
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
@@ -70,35 +67,35 @@ const MainScreen = () => {
     }, 200);
   };
 
-  const addShakeListener = (handler) => {
-    const THRESHOLD = 200;
-
-    let last_x, last_y, last_z;
-    let lastUpdate = 0;
+  const [lastPosition, setLastPosition] = useState(null);
+  const [currentPosition, setCurrentPosition] = useState(null);
+  const _subscribe = () => {
+    Accelerometer.setUpdateInterval(100);
     setSubscription(
-      Accelerometer.addListener((accelerometerData) => {
-        let { x, y, z } = accelerometerData;
-        let currTime = Date.now();
-        let diffTime = currTime - lastUpdate;
-        lastUpdate = currTime;
-        let speed = (Math.abs(x + y + z - last_x - last_y - last_z) / diffTime) * 10000;
-        if (speed > THRESHOLD) {
-          setRn(speed);
-          console.log(rn);
-        }
-        last_x = x;
-        last_y = y;
-        last_z = z;
+      Accelerometer.addListener((data) => {
+        setCurrentPosition(data);
       })
     );
   };
 
+  const _unsubscribe = () => {
+    subscription && subscription.remove();
+    setSubscription(null);
+  };
+
   useEffect(() => {
-    Accelerometer.setUpdateInterval(100);
-    addShakeListener(() => {
-      //add your code here
-      if (!rolling) rollDice();
-    });
+    //calculam viteza de fiecare data cand se misca telefonul
+    setLastPosition(currentPosition);
+    if (currentPosition && lastPosition) {
+      const { x, y, z } = currentPosition;
+      const speed = Math.abs(x + y + z - lastPosition.x - lastPosition.y - lastPosition.z) * 100;
+      if (speed > 300 && !rolling) rollDice();
+    }
+  }, [currentPosition]);
+
+  useEffect(() => {
+    _subscribe();
+
     getDiceValues().then((data) => {
       if (data.diceValues.length > 0) {
         const lastValue = data.diceValues[0];
@@ -108,7 +105,8 @@ const MainScreen = () => {
         setRightDice(diceFaces[lastValue[1]] - 1);
       }
     });
-    return () => ShakeEventExpo.removeListener();
+
+    return () => _unsubscribe();
   }, []);
 
   const getDiceValues = async () => {
@@ -133,6 +131,7 @@ const MainScreen = () => {
       console.log(e);
     }
   };
+
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
       {/* HISTORY BUTTON */}
