@@ -40,18 +40,16 @@ const MainScreen = () => {
   const rollDice = () => {
     if (rolling) return;
 
-    let leftDiceNumber;
-    let rightDiceNumber;
-    let iterations = 0;
     if (previousResults) setPreviousResults([result, ...previousResults]);
     else if (result) setPreviousResults([result]);
 
     setRolling(true);
+    let iterations = 0;
     let interval = setInterval(() => {
       iterations++;
 
-      leftDiceNumber = randomIntFromInterval(1, 6);
-      rightDiceNumber = randomIntFromInterval(1, 6);
+      let leftDiceNumber = randomIntFromInterval(1, 6);
+      let rightDiceNumber = randomIntFromInterval(1, 6);
 
       setLeftDice(diceFaces[leftDiceNumber - 1]);
       setRightDice(diceFaces[rightDiceNumber - 1]);
@@ -63,7 +61,7 @@ const MainScreen = () => {
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
         //in caz ca am dat dubla sa nu se afiseze instant modalul
         setTimeout(() => {
-          if (leftDiceNumber == rightDiceNumber || true) {
+          if (leftDiceNumber == rightDiceNumber) {
             setActiveModal(true);
             Vibration.vibrate(vibrationPattern);
           }
@@ -98,13 +96,15 @@ const MainScreen = () => {
     }
     return 0;
   };
+
+  //called every 100ms
   useEffect(() => {
     if (getShakingSpeed() > 300 && !rolling) rollDice();
   }, [currentPosition]);
 
+  //called on mount
   useEffect(() => {
     _subscribe();
-    console.log("ok");
     navigation.addListener("focus", () => _subscribe());
     navigation.addListener("blur", () => _unsubscribe());
     getDiceValues().then((data) => {
@@ -121,36 +121,28 @@ const MainScreen = () => {
   }, []);
 
   const getDiceValues = async () => {
-    try {
-      const value = await AsyncStorage.getItem("data13");
-      if (value !== null) {
-        return JSON.parse(value);
-      } else return { diceValues: [] };
-    } catch (e) {
-      console.log(e);
-    }
+    const value = await AsyncStorage.getItem("data13");
+    if (value !== null) {
+      return JSON.parse(value);
+    } else return { diceValues: [] };
   };
 
   const storeDiceValues = async (value) => {
-    try {
-      const lastDiceValues = await getDiceValues();
-      const newDiceValues = {
-        diceValues: [value, ...lastDiceValues.diceValues],
-      };
-      await AsyncStorage.setItem("data13", JSON.stringify(newDiceValues));
-    } catch (e) {
-      console.log(e);
-    }
+    const lastDiceValues = await getDiceValues();
+    const newDiceValues = {
+      diceValues: [value, ...lastDiceValues.diceValues],
+    };
+    await AsyncStorage.setItem("data13", JSON.stringify(newDiceValues));
+  };
+
+  const handleHistoryButton = () => {
+    if (!rolling) navigation.navigate("History", { previousResults });
   };
 
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
       {/* HISTORY BUTTON */}
-      <TouchableOpacity
-        style={styles.historyContainer}
-        onPress={() => navigation.navigate("History", { previousResults })}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.historyContainer} onPress={handleHistoryButton} activeOpacity={rolling ? 1 : 0.7}>
         <View style={styles.textContainer}>
           <TitanOneText style={{ fontSize: 14 }}>Zarul anterior</TitanOneText>
           {previousResults ? (
@@ -161,7 +153,11 @@ const MainScreen = () => {
             <TitanOneText>0-0</TitanOneText>
           )}
         </View>
-        <Image resizeMode="contain" style={styles.historyIcon} source={require("../assets/icons/ic_nav_history.png")} />
+        <Image
+          resizeMode="contain"
+          style={[styles.historyIcon, { opacity: rolling ? 0.5 : 1 }]}
+          source={require("../assets/icons/ic_nav_history.png")}
+        />
       </TouchableOpacity>
 
       {/* INVARTE-MA LOGO */}
