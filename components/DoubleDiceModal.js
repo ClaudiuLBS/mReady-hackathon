@@ -4,21 +4,39 @@ import CustomButton from "./CustomButton";
 import { useEffect, useRef } from "react";
 
 const DoubleDiceModal = ({ closeModal }) => {
-  const fadeInAnimation = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.timing(fadeInAnimation, {
+  const fadeAnimation = useRef(new Animated.Value(0)).current;
+  const animationDuration = 200;
+  const fadeIn = () => {
+    Animated.timing(fadeAnimation, {
       toValue: 1,
-      duration: 200,
+      duration: animationDuration,
       useNativeDriver: true,
     }).start();
+  };
+
+  const fadeOut = () => {
+    Animated.timing(fadeAnimation, {
+      toValue: 0,
+      duration: animationDuration,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  useEffect(() => {
+    fadeIn();
   }, []);
+
+  const handleButton = () => {
+    fadeOut();
+    setTimeout(() => closeModal(), animationDuration);
+  };
+
   return (
-    <Animated.View style={[styles.background, { opacity: fadeInAnimation }]}>
+    <Animated.View style={[styles.background, { opacity: fadeAnimation }]}>
       <View style={styles.container}>
         <TitanOneText style={styles.title}>Ai dat dublă!</TitanOneText>
-        <TitanOneText style={styles.subtitle}>Foarte tare! Bravo, mai</TitanOneText>
-        <TitanOneText style={styles.subtitle}>încearcă până mai dai o dată!</TitanOneText>
-        <CustomButton style={styles.button} onPress={closeModal}>
+        <TitanOneText style={styles.subtitle}>Foarte tare! Bravo, mai{"\n"}încearcă până mai dai o dată!</TitanOneText>
+        <CustomButton style={styles.button} onPress={handleButton}>
           Super tare, mersi
         </CustomButton>
       </View>
@@ -51,6 +69,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginBottom: 10,
+    textAlign: "center",
   },
   button: {
     marginTop: 10,

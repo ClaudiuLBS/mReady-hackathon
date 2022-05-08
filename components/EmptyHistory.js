@@ -5,8 +5,10 @@ const EptyHistory = () => {
     <View style={styles.container}>
       <Image style={styles.diceImage} source={require("../assets/logos/illustration_empty_history.png")} />
       <TitanOneText style={styles.title}>Nu ai istoric încă</TitanOneText>
-      <TitanOneText style={styles.subtitle}>Dă shake sau învârte zarurile,</TitanOneText>
-      <TitanOneText style={styles.subtitle}>aici vor apărea toate scorurile tale</TitanOneText>
+      <TitanOneText style={styles.subtitle}>
+        Dă shake sau învârte zarurile,{"\n"}aici vor apărea toate scorurile tale
+      </TitanOneText>
+      <TitanOneText style={styles.subtitle}></TitanOneText>
     </View>
   );
 };
@@ -30,6 +32,8 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     marginBottom: 5,
+    textAlign: "center",
+    lineHeight: 25,
   },
 });
 

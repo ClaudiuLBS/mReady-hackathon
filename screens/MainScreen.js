@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Dimensions, Image, ImageBackground, StyleSheet, TouchableOpacity, Vibration, View } from "react-native";
@@ -63,7 +63,7 @@ const MainScreen = () => {
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
         //in caz ca am dat dubla sa nu se afiseze instant modalul
         setTimeout(() => {
-          if (leftDiceNumber == rightDiceNumber) {
+          if (leftDiceNumber == rightDiceNumber || true) {
             setActiveModal(true);
             Vibration.vibrate(vibrationPattern);
           }
@@ -85,23 +85,28 @@ const MainScreen = () => {
   };
 
   const _unsubscribe = () => {
-    subscription && subscription.remove();
+    Accelerometer.removeAllListeners();
     setSubscription(null);
   };
 
-  useEffect(() => {
-    //calculam viteza de fiecare data cand se misca telefonul
+  const getShakingSpeed = () => {
     setLastPosition(currentPosition);
     if (currentPosition && lastPosition) {
       const { x, y, z } = currentPosition;
       const speed = Math.abs(x + y + z - lastPosition.x - lastPosition.y - lastPosition.z) * 100;
-      if (speed > 300 && !rolling) rollDice();
+      return speed;
     }
+    return 0;
+  };
+  useEffect(() => {
+    if (getShakingSpeed() > 300 && !rolling) rollDice();
   }, [currentPosition]);
 
   useEffect(() => {
     _subscribe();
-
+    console.log("ok");
+    navigation.addListener("focus", () => _subscribe());
+    navigation.addListener("blur", () => _unsubscribe());
     getDiceValues().then((data) => {
       if (data.diceValues.length > 0) {
         const lastValue = data.diceValues[0];
@@ -117,7 +122,7 @@ const MainScreen = () => {
 
   const getDiceValues = async () => {
     try {
-      const value = await AsyncStorage.getItem("data12");
+      const value = await AsyncStorage.getItem("data13");
       if (value !== null) {
         return JSON.parse(value);
       } else return { diceValues: [] };
@@ -132,7 +137,7 @@ const MainScreen = () => {
       const newDiceValues = {
         diceValues: [value, ...lastDiceValues.diceValues],
       };
-      await AsyncStorage.setItem("data12", JSON.stringify(newDiceValues));
+      await AsyncStorage.setItem("data13", JSON.stringify(newDiceValues));
     } catch (e) {
       console.log(e);
     }
