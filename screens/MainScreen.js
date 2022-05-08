@@ -25,7 +25,6 @@ const MainScreen = () => {
   const [leftDice, setLeftDice] = useState(dice1);
   const [rightDice, setRightDice] = useState(dice2);
 
-  const [result, setResult] = useState(null);
   const [previousResults, setPreviousResults] = useState(null);
 
   const [rolling, setRolling] = useState(false);
@@ -40,14 +39,10 @@ const MainScreen = () => {
   const rollDice = () => {
     if (rolling) return;
 
-    if (previousResults) setPreviousResults([result, ...previousResults]);
-    else if (result) setPreviousResults([result]);
-
     setRolling(true);
     let iterations = 0;
     let interval = setInterval(() => {
       iterations++;
-
       let leftDiceNumber = randomIntFromInterval(1, 6);
       let rightDiceNumber = randomIntFromInterval(1, 6);
 
@@ -57,7 +52,9 @@ const MainScreen = () => {
       if (iterations == 10) {
         //se invarte zarul de 10 ori
         clearInterval(interval);
-        setResult([leftDiceNumber, rightDiceNumber]);
+        //modificam
+        if (previousResults) setPreviousResults([[leftDiceNumber, rightDiceNumber], ...previousResults]);
+        else setPreviousResults([[leftDiceNumber, rightDiceNumber]]);
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
         //in caz ca am dat dubla sa nu se afiseze instant modalul
         setTimeout(() => {
@@ -111,7 +108,6 @@ const MainScreen = () => {
       if (data.diceValues.length > 0) {
         const lastValue = data.diceValues[0];
         setPreviousResults(data.diceValues);
-        setResult(lastValue);
         setLeftDice(diceFaces[lastValue[0]] - 1);
         setRightDice(diceFaces[lastValue[1]] - 1);
       }
@@ -121,7 +117,7 @@ const MainScreen = () => {
   }, []);
 
   const getDiceValues = async () => {
-    const value = await AsyncStorage.getItem("data13");
+    const value = await AsyncStorage.getItem("data17");
     if (value !== null) {
       return JSON.parse(value);
     } else return { diceValues: [] };
@@ -132,7 +128,7 @@ const MainScreen = () => {
     const newDiceValues = {
       diceValues: [value, ...lastDiceValues.diceValues],
     };
-    await AsyncStorage.setItem("data13", JSON.stringify(newDiceValues));
+    await AsyncStorage.setItem("data17", JSON.stringify(newDiceValues));
   };
 
   const handleHistoryButton = () => {
@@ -145,9 +141,9 @@ const MainScreen = () => {
       <TouchableOpacity style={styles.historyContainer} onPress={handleHistoryButton} activeOpacity={rolling ? 1 : 0.7}>
         <View style={styles.textContainer}>
           <TitanOneText style={{ fontSize: 14 }}>Zarul anterior</TitanOneText>
-          {previousResults ? (
+          {previousResults && previousResults.length > 1 ? (
             <TitanOneText>
-              {previousResults[0][0]}-{previousResults[0][1]}
+              {previousResults[1][0]}-{previousResults[1][1]}
             </TitanOneText>
           ) : (
             <TitanOneText>0-0</TitanOneText>
