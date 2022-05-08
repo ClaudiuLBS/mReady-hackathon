@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Dimensions, Image, ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, ImageBackground, StyleSheet, TouchableOpacity, Vibration, View } from "react-native";
 import { Accelerometer } from "expo-sensors";
 
 import TitanOneText from "../components/TitanOneText";
@@ -21,14 +21,18 @@ const dice6 = require("../assets/dice/dice_face_06.png");
 const diceFaces = [dice1, dice2, dice3, dice4, dice5, dice6];
 const MainScreen = () => {
   const navigation = useNavigation();
+
   const [leftDice, setLeftDice] = useState(dice1);
   const [rightDice, setRightDice] = useState(dice2);
+
   const [result, setResult] = useState(null);
   const [previousResults, setPreviousResults] = useState(null);
+
   const [rolling, setRolling] = useState(false);
   const [activeModal, setActiveModal] = useState(false);
   const [subscription, setSubscription] = useState(null);
 
+  const vibrationPattern = [30, 150, 30, 300];
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
   };
@@ -57,10 +61,12 @@ const MainScreen = () => {
         clearInterval(interval);
         setResult([leftDiceNumber, rightDiceNumber]);
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
-
         //in caz ca am dat dubla sa nu se afiseze instant modalul
         setTimeout(() => {
-          if (leftDiceNumber == rightDiceNumber) setActiveModal(true);
+          if (leftDiceNumber == rightDiceNumber) {
+            setActiveModal(true);
+            Vibration.vibrate(vibrationPattern);
+          }
           setRolling(false);
         }, 500);
       }
