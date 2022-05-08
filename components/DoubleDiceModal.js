@@ -1,10 +1,19 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import TitanOneText from "./TitanOneText";
 import CustomButton from "./CustomButton";
+import { useEffect, useRef } from "react";
 
 const DoubleDiceModal = ({ closeModal }) => {
+  const fadeInAnimation = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(fadeInAnimation, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, []);
   return (
-    <View style={styles.background}>
+    <Animated.View style={[styles.background, { opacity: fadeInAnimation }]}>
       <View style={styles.container}>
         <TitanOneText style={styles.title}>Ai dat dublă!</TitanOneText>
         <TitanOneText style={styles.subtitle}>Foarte tare! Bravo, mai</TitanOneText>
@@ -13,7 +22,7 @@ const DoubleDiceModal = ({ closeModal }) => {
           Super tare, mersi
         </CustomButton>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 const styles = StyleSheet.create({
