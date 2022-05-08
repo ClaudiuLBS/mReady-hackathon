@@ -117,7 +117,7 @@ const MainScreen = () => {
 
   const getDiceValues = async () => {
     try {
-      const value = await AsyncStorage.getItem("data7");
+      const value = await AsyncStorage.getItem("data12");
       if (value !== null) {
         return JSON.parse(value);
       } else return { diceValues: [] };
@@ -132,7 +132,7 @@ const MainScreen = () => {
       const newDiceValues = {
         diceValues: [value, ...lastDiceValues.diceValues],
       };
-      await AsyncStorage.setItem("data7", JSON.stringify(newDiceValues));
+      await AsyncStorage.setItem("data12", JSON.stringify(newDiceValues));
     } catch (e) {
       console.log(e);
     }

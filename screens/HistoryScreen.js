@@ -1,5 +1,4 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useEffect } from "react";
 import { FlatList, Image, ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
 import EmptyHistory from "../components/EmptyHistory";
 import HistoryItem from "../components/HistoryItem";
@@ -8,8 +7,6 @@ import TitanOneText from "../components/TitanOneText";
 const HistoryScreen = ({ route }) => {
   const navigation = useNavigation();
   const { previousResults } = route.params;
-
-  if (!previousResults) return <EmptyHistory />;
 
   return (
     <ImageBackground style={styles.container} source={require("../assets/background/bg_pattern.png")}>
@@ -20,7 +17,7 @@ const HistoryScreen = ({ route }) => {
         </TouchableOpacity>
         <TitanOneText style={styles.headerText}>Istoric</TitanOneText>
       </View>
-      <FlatList data={previousResults} renderItem={HistoryItem} />
+      {previousResults ? <FlatList data={previousResults} renderItem={HistoryItem} /> : <EmptyHistory />}
     </ImageBackground>
   );
 };
