@@ -8,9 +8,6 @@ import TitanOneText from "../components/TitanOneText";
 const HistoryScreen = ({ route }) => {
   const navigation = useNavigation();
   const { previousResults } = route.params;
-  useEffect(() => {
-    console.log(previousResults);
-  }, []);
 
   if (!previousResults) return <EmptyHistory />;
 
@@ -31,12 +28,12 @@ const HistoryScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   headerContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 32,
+    marginLeft: 20,
   },
   headerText: {
     fontSize: 24,

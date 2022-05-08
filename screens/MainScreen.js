@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Dimensions, Image, ImageBackground, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, ImageBackground, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Accelerometer } from "expo-sensors";
 
 import TitanOneText from "../components/TitanOneText";
+import DoubleDiceModal from "./../components/DoubleDiceModal";
+import CustomButton from "../components/CustomButton";
+import ShakeEventExpo from "../utils/ShakeEventExpo";
 
 const footerWidth = Dimensions.get("window").width;
 const footerHeight = footerWidth / 1.9;
@@ -22,18 +26,26 @@ const MainScreen = () => {
   const [rightDice, setRightDice] = useState(dice2);
   const [result, setResult] = useState(null);
   const [previousResults, setPreviousResults] = useState(null);
+  const [rolling, setRolling] = useState(false);
+  const [activeModal, setActiveModal] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+
+  const [rn, setRn] = useState(0);
 
   const randomIntFromInterval = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
   };
 
   const rollDice = () => {
+    if (rolling) return;
+
     let leftDiceNumber;
     let rightDiceNumber;
     let iterations = 0;
-    console.log(result);
     if (previousResults) setPreviousResults([result, ...previousResults]);
     else if (result) setPreviousResults([result]);
+
+    setRolling(true);
     let interval = setInterval(() => {
       iterations++;
 
@@ -43,16 +55,50 @@ const MainScreen = () => {
       setLeftDice(diceFaces[leftDiceNumber - 1]);
       setRightDice(diceFaces[rightDiceNumber - 1]);
 
-      if (iterations == 20) {
+      if (iterations == 10) {
+        //se invarte zarul de 10 ori
         clearInterval(interval);
         setResult([leftDiceNumber, rightDiceNumber]);
         storeDiceValues([leftDiceNumber, rightDiceNumber]);
-        console.log(previousResults);
+
+        //in caz ca am dat dubla sa nu se afiseze instant modalul
+        setTimeout(() => {
+          if (leftDiceNumber == rightDiceNumber) setActiveModal(true);
+          setRolling(false);
+        }, 500);
       }
-    }, 100);
+    }, 200);
+  };
+
+  const addShakeListener = (handler) => {
+    const THRESHOLD = 200;
+
+    let last_x, last_y, last_z;
+    let lastUpdate = 0;
+    setSubscription(
+      Accelerometer.addListener((accelerometerData) => {
+        let { x, y, z } = accelerometerData;
+        let currTime = Date.now();
+        let diffTime = currTime - lastUpdate;
+        lastUpdate = currTime;
+        let speed = (Math.abs(x + y + z - last_x - last_y - last_z) / diffTime) * 10000;
+        if (speed > THRESHOLD) {
+          setRn(speed);
+          console.log(rn);
+        }
+        last_x = x;
+        last_y = y;
+        last_z = z;
+      })
+    );
   };
 
   useEffect(() => {
+    Accelerometer.setUpdateInterval(100);
+    addShakeListener(() => {
+      //add your code here
+      if (!rolling) rollDice();
+    });
     getDiceValues().then((data) => {
       if (data.diceValues.length > 0) {
         const lastValue = data.diceValues[0];
@@ -62,11 +108,12 @@ const MainScreen = () => {
         setRightDice(diceFaces[lastValue[1]] - 1);
       }
     });
+    return () => ShakeEventExpo.removeListener();
   }, []);
 
   const getDiceValues = async () => {
     try {
-      const value = await AsyncStorage.getItem("data6");
+      const value = await AsyncStorage.getItem("data7");
       if (value !== null) {
         return JSON.parse(value);
       } else return { diceValues: [] };
@@ -81,7 +128,7 @@ const MainScreen = () => {
       const newDiceValues = {
         diceValues: [value, ...lastDiceValues.diceValues],
       };
-      await AsyncStorage.setItem("data6", JSON.stringify(newDiceValues));
+      await AsyncStorage.setItem("data7", JSON.stringify(newDiceValues));
     } catch (e) {
       console.log(e);
     }
@@ -119,9 +166,9 @@ const MainScreen = () => {
       {/* DICE COMMANDS */}
       <View>
         {/* INVARTE ZARURILE BUTTON */}
-        <TouchableOpacity style={styles.rollDiceButton} onPress={rollDice} activeOpacity={0.7}>
-          <TitanOneText style={styles.diceText}>Învârte zarurile</TitanOneText>
-        </TouchableOpacity>
+        <CustomButton onPress={rollDice} inactive={rolling}>
+          Învârte zarurile
+        </CustomButton>
 
         {/* DA UN SHAKE */}
         <View style={styles.shakeContainer}>
@@ -129,7 +176,7 @@ const MainScreen = () => {
           <Image style={styles.shakeImage} source={require("../assets/icons/ic_shake.png")} />
         </View>
       </View>
-
+      {activeModal ? <DoubleDiceModal closeModal={() => setActiveModal(false)} /> : null}
       {/* FOOTER IMAGE */}
       <Image resizeMode="stretch" style={styles.footer} source={require("../assets/background/bg_footer.png")} />
     </ImageBackground>
@@ -180,15 +227,6 @@ const styles = StyleSheet.create({
     height: 108,
     width: 108,
     margin: 15,
-  },
-  diceText: {
-    fontSize: 16,
-    alignSelf: "center",
-  },
-  rollDiceButton: {
-    backgroundColor: "#D87153",
-    borderRadius: 50,
-    padding: 10,
   },
   shakeContainer: {
     flexDirection: "row",
